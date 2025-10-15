@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Recherche CSV</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;margin:0;padding:20px}
+.card{max-width:900px;margin:24px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
+input{padding:10px;border-radius:8px;border:1px solid #ccc;width:70%}
+button{padding:10px 14px;border-radius:8px;border:none;background:#ff7a00;color:white;cursor:pointer}
+.small{font-size:0.9em;color:#555}
+.table{width:100%;border-collapse:collapse;margin-top:12px}
+.table th,.table td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+.badge{display:inline-block;padding:6px 10px;border-radius:8px;background:#eef}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Recherche</h2>
+  <p class="small">Tape un ID exact (sensible à la casse) pour obtenir : <strong>classe, nom prénom, id, password</strong>.</p>
+  <form id="searchForm">
+    <input id="q" name="q" placeholder="Rechercher (ID exact ou texte)"><button type="submit">Rechercher</button>
+  </form>
+
+  <div id="message" style="margin-top:12px"></div>
+
+  <!-- Zone de débridage : cachée par défaut, apparait après OTP -->
+  <div id="debrideArea" style="display:none;margin-top:12px">
+    <p class="small"><strong>Mode débridé activé</strong> — recherche insensible à la casse sur toutes les colonnes :</p>
+    <form id="debrideForm">
+      <input id="q2" name="q2" placeholder="Recherche débridée (insensible à la casse)"><button type="submit">Rechercher (débridé)</button>
+    </form>
+    <div id="debrideMsg" style="margin-top:8px;color:green"></div>
+  </div>
+
+  <div id="results" style="margin-top:18px"></div>
+</div>
+
+<script>
+async function postForm(url, formData){
+  const resp = await fetch(url, { method:'POST', body: formData, credentials: 'same-origin' });
+  return resp.json();
+}
+
+document.getElementById('searchForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const q = document.getElementById('q').value.trim();
+  if(!q) return;
+  const fd = new FormData();
+  fd.append('q', q);
+  const r = await postForm('/search', fd);
+  const msg = document.getElementById('message');
+  const results = document.getElementById('results');
+
+  if(r.status === 'unlocked'){
+    // OTP débridage : afficher le message et révéler champ débridé
+    msg.innerHTML = '<span style="color:green">mode debridé activé</span>';
+    document.getElementById('debrideArea').style.display = 'block';
+    document.getElementById('debrideMsg').textContent = "Mode débridé activé — utilisez le champ ci-dessous.";
+    results.innerHTML = ''; // pas de résultats montrés ici
+    return;
+  }
+
+  // Sinon on a des rows (liste des colonnes demandées : classe, nom, id, password)
+  msg.innerHTML = '<small>Résultats: '+r.matches+'</small>';
+  if(r.rows && r.rows.length){
+    let html = '<table class="table"><thead><tr><th>Classe</th><th>Nom Prénom</th><th>ID</th><th>Password</th></tr></thead><tbody>';
+    for(const row of r.rows){
+      // row contient 4 colonnes sélectionnées
+      html += '<tr>';
+      html += '<td>'+ (row[0] || '') +'</td>';
+      html += '<td>'+ (row[1] || '') +'</td>';
+      html += '<td>'+ (row[2] || '') +'</td>';
+      html += '<td>'+ (row[3] || '') +'</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    results.innerHTML = html;
+  } else {
+    results.innerHTML = '<p>Aucun résultat.</p>';
+  }
+});
+
+document.getElementById('debrideForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const q2 = document.getElementById('q2').value.trim();
+  if(!q2) return;
+  const fd = new FormData();
+  fd.append('q', q2);
+  fd.append('debride', '1'); // indique mode débridé
+  const r = await postForm('/search', fd);
+  const results = document.getElementById('results');
+  if(r.rows && r.rows.length){
+    // afficher lignes complètes (toutes colonnes)
+    let html = '<table class="table"><thead><tr>';
+    // si le serveur renvoie headers, on pourrait les utiliser; ici on affiche numerically
+    // print columns as col1..colN
+    const first = r.rows[0];
+    const colCount = first.length;
+    for(let i=0;i<colCount;i++) html += '<th>Col '+(i+1)+'</th>';
+    html += '</tr></thead><tbody>';
+    for(const row of r.rows){
+      html += '<tr>';
+      for(const cell of row){
+        html += '<td>' + (cell || '') + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    results.innerHTML = html;
+  } else {
+    results.innerHTML = '<p>Aucun résultat.</p>';
+  }
+});
+</script>
+</body>
+</html>

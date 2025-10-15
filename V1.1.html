@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Base de donnée code magret Berthelot</title>
+  <style>
+    body{font-family:Arial, sans-serif;background:#f6f7fb;color:#111;padding:28px}
+    .card{background:white;border-radius:10px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:1000px;margin:auto}
+    input,button{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:6px}
+    button{background:#ff7a00;color:white;cursor:pointer;border:none}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border-bottom:1px solid #eee;padding:6px;text-align:left}
+    #advancedContainer { display: none; margin-top: 10px; }
+    #resultsTable.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Base de donnée code magret Berthelot</h1>
+    <p><b>⚠️ Attention :</b> l'identifiant doit être entier et correctement écrit.</p>
+
+    <div>
+      <input id="query" type="text" placeholder="Chercher un identifiant">
+      <button id="searchBtn">Rechercher</button>
+    </div>
+
+    <div id="advancedContainer">
+      <input id="queryFull" type="text" placeholder="Recherche complète (nom, identifiant, mot de passe...)">
+      <button id="searchFullBtn">Rechercher partout</button>
+    </div>
+
+    <p id="stats"></p>
+    <table id="resultsTable" class="hidden">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script>
+(async () => {
+  const csvPath = '/Pages/all.csv';
+  const stats = document.getElementById('stats');
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+  const resultsTable = document.getElementById('resultsTable');
+  const queryInput = document.getElementById('query');
+  const advancedContainer = document.getElementById('advancedContainer');
+  const queryFull = document.getElementById('queryFull');
+  let rows = [];
+
+  async function loadCSV() {
+    try {
+      const res = await fetch(csvPath);
+      if (!res.ok) throw new Error('Fichier introuvable');
+      const text = await res.text();
+      const parsed = Papa.parse(text, {header:true, skipEmptyLines:true});
+      rows = parsed.data.filter(r => !(r.vide === 'vide' || r.vide_1 === 'vide_1' || r.vide_2 === 'vide_2'))
+                       .map(r => {
+                         const filtered = {...r};
+                         delete filtered.vide;
+                         delete filtered.vide_1;
+                         delete filtered.vide_2;
+                         return filtered;
+                       });
+      stats.textContent = `${rows.length} éléments disponibles dans la base de donnée`;
+    } catch (e) {
+      stats.textContent = '❌ Erreur de chargement : ' + e.message;
+    }
+  }
+
+  function renderTable(data){
+    if (!data.length) { resultsTable.classList.add('hidden'); return; }
+    resultsTable.classList.remove('hidden');
+    const cols = Object.keys(data[0]);
+    thead.innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+    tbody.innerHTML = data.map(r => '<tr>' + cols.map(c => `<td>${r[c] || ''}</td>`).join('') + '</tr>').join('');
+  }
+
+  // Recherche par identifiant uniquement (sensible à la casse)
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const q = queryInput.value.trim();
+
+    // Active le mode débridé si 5GF7DR est tapé exactement
+    if (q === '5GF7DR') {
+      advancedContainer.style.display = 'block';
+      stats.textContent = 'Mode débridé activé 🔓';
+      queryInput.value = '';
+      return;
+    }
+
+    if (!q) {
+      stats.textContent = 'Veuillez entrer un identifiant';
+      return;
+    }
+
+    // Comparaison stricte (sensible à la casse)
+    const filtered = rows.filter(r => String(r.identifiant || '') === q);
+
+    stats.textContent = `${filtered.length} résultat(s) pour l'identifiant "${q}"`;
+    renderTable(filtered);
+  });
+
+  // Recherche complète (mode débridé)
+  document.getElementById('searchFullBtn').addEventListener('click', () => {
+    const q = queryFull.value.toLowerCase().trim();
+    if (!q) {
+      stats.textContent = 'Veuillez entrer un terme de recherche';
+      return;
+    }
+    const filtered = rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+    stats.textContent = `${filtered.length} résultat(s) pour "${q}" (mode débridé)`;
+    renderTable(filtered);
+  });
+
+  loadCSV();
+})();
+</script>
+</body>
+</html>
