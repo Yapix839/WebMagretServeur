@@ -1,0 +1,10 @@
+Mon_projet/
+├── app.py
+├── aleatoire_password.py
+├── requirements.txt
+├── data/
+│   ├── unlock_secret.txt      # clé OTP dédiée pour débridage
+│   └── users.txt              # users: username:password:totp_secret
+└── Pages/
+    ├── all.csv
+    └── search_csv_web.html
