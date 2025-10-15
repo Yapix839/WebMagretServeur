@@ -1,4 +1,5 @@
 # username:password:totp_secret
 # si password == OTP => login exige un OTP en guise de "mot de passe"
 yann.magret:ZX415M:K5GRBSFKVVOSGDWHGDKGJTS53OOHW4MI
+paolo.magret:X45G9N:MYBSNCGQFGN2OI4SP5O5LGCVN6PFVZEB
 

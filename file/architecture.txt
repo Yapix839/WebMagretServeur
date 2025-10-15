@@ -1,0 +1,15 @@
+Mon_projet/
+├── app.py
+├── gen_totp_secret.py               # Générateur de clé TOTP base32
+├── requirements.txt
+├── README.md
+├── data/
+│   ├── unlock_secret.txt            # clé OTP dédiée pour débridage
+│   └── users.txt                    # users: username:password:totp_secret
+├── Pages/
+│   ├── all.csv
+│   ├── search_csv_web.html
+│   └── V1.1.html
+├── file/
+│   ├── architecture.txt
+│   ├── requirements.txt

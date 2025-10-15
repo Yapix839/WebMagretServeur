@@ -5,13 +5,15 @@
 <title>Recherche CSV</title>
 <style>
 body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;margin:0;padding:20px}
-.card{max-width:900px;margin:24px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
+.card{max-width:600px;margin:24px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
 input{padding:10px;border-radius:8px;border:1px solid #ccc;width:70%}
 button{padding:10px 14px;border-radius:8px;border:none;background:#ff7a00;color:white;cursor:pointer}
 .small{font-size:0.9em;color:#555}
 .table{width:100%;border-collapse:collapse;margin-top:12px}
 .table th,.table td{padding:8px;border-bottom:1px solid #eee;text-align:left}
 .badge{display:inline-block;padding:6px 10px;border-radius:8px;background:#eef}
+#debrideForm { display: flex; align-items: center; }
+#debrideForm button { margin-left: 12px; }
 </style>
 </head>
 <body>
@@ -19,7 +21,8 @@ button{padding:10px 14px;border-radius:8px;border:none;background:#ff7a00;color:
   <h2>Recherche</h2>
   <p class="small">Tape un ID exact (sensible à la casse) pour obtenir : <strong>classe, nom prénom, id, password</strong>.</p>
   <form id="searchForm">
-    <input id="q" name="q" placeholder="Rechercher (ID exact ou texte)"><button type="submit">Rechercher</button>
+    <input id="q" name="q" placeholder="Rechercher (ID exact ou texte)">
+    <button type="submit">Rechercher</button>
   </form>
 
   <div id="message" style="margin-top:12px"></div>
@@ -28,7 +31,8 @@ button{padding:10px 14px;border-radius:8px;border:none;background:#ff7a00;color:
   <div id="debrideArea" style="display:none;margin-top:12px">
     <p class="small"><strong>Mode débridé activé</strong> — recherche insensible à la casse sur toutes les colonnes :</p>
     <form id="debrideForm">
-      <input id="q2" name="q2" placeholder="Recherche débridée (insensible à la casse)"><button type="submit">Rechercher (débridé)</button>
+      <input id="q2" name="q2" placeholder="Recherche débridée (insensible à la casse)">
+      <button type="submit">Rechercher (débridé)</button>
     </form>
     <div id="debrideMsg" style="margin-top:8px;color:green"></div>
   </div>
@@ -54,9 +58,7 @@ document.getElementById('searchForm').addEventListener('submit', async function(
 
   if(r.status === 'unlocked'){
     // OTP débridage : afficher le message et révéler champ débridé
-    msg.innerHTML = '<span style="color:green">mode debridé activé</span>';
     document.getElementById('debrideArea').style.display = 'block';
-    document.getElementById('debrideMsg').textContent = "Mode débridé activé — utilisez le champ ci-dessous.";
     results.innerHTML = ''; // pas de résultats montrés ici
     return;
   }
@@ -93,11 +95,14 @@ document.getElementById('debrideForm').addEventListener('submit', async function
   if(r.rows && r.rows.length){
     // afficher lignes complètes (toutes colonnes)
     let html = '<table class="table"><thead><tr>';
-    // si le serveur renvoie headers, on pourrait les utiliser; ici on affiche numerically
-    // print columns as col1..colN
-    const first = r.rows[0];
-    const colCount = first.length;
-    for(let i=0;i<colCount;i++) html += '<th>Col '+(i+1)+'</th>';
+    // Affiche les vrais noms de colonnes si disponibles
+    if(r.headers && r.headers.length){
+      for(const h of r.headers) html += '<th>' + (h || '') + '</th>';
+    } else {
+      const first = r.rows[0];
+      const colCount = first.length;
+      for(let i=0;i<colCount;i++) html += '<th>Col '+(i+1)+'</th>';
+    }
     html += '</tr></thead><tbody>';
     for(const row of r.rows){
       html += '<tr>';
