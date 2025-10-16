@@ -21,7 +21,7 @@ button{padding:10px 14px;border-radius:8px;border:none;background:#ff7a00;color:
   <h2>Recherche</h2>
   <p class="small">Tape un ID exact (sensible à la casse) pour obtenir : <strong>classe, nom prénom, id, password</strong>.</p>
   <form id="searchForm">
-    <input id="q" name="q" placeholder="Rechercher (ID exact ou texte)">
+    <input id="q" name="q" placeholder="Rechercher (ID exact uniquement)">
     <button type="submit">Rechercher</button>
   </form>
 
@@ -63,21 +63,26 @@ document.getElementById('searchForm').addEventListener('submit', async function(
     return;
   }
 
-  // Sinon on a des rows (liste des colonnes demandées : classe, nom, id, password)
-  msg.innerHTML = '<small>Résultats: '+r.matches+'</small>';
+  // Afficher uniquement les résultats dont l'ID correspond exactement à la saisie (sensible à la casse)
   if(r.rows && r.rows.length){
-    let html = '<table class="table"><thead><tr><th>Classe</th><th>Nom Prénom</th><th>ID</th><th>Password</th></tr></thead><tbody>';
-    for(const row of r.rows){
-      // row contient 4 colonnes sélectionnées
-      html += '<tr>';
-      html += '<td>'+ (row[0] || '') +'</td>';
-      html += '<td>'+ (row[1] || '') +'</td>';
-      html += '<td>'+ (row[2] || '') +'</td>';
-      html += '<td>'+ (row[3] || '') +'</td>';
-      html += '</tr>';
+    // On filtre côté client au cas où, mais le backend doit déjà limiter à une correspondance exacte
+    const filtered = r.rows.filter(row => row[2] === q);
+    msg.innerHTML = '<small>Résultats: '+filtered.length+'</small>';
+    if(filtered.length){
+      let html = '<table class="table"><thead><tr><th>Classe</th><th>Nom Prénom</th><th>ID</th><th>Password</th></tr></thead><tbody>';
+      for(const row of filtered){
+        html += '<tr>';
+        html += '<td>'+ (row[0] || '') +'</td>';
+        html += '<td>'+ (row[1] || '') +'</td>';
+        html += '<td>'+ (row[2] || '') +'</td>';
+        html += '<td>'+ (row[3] || '') +'</td>';
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      results.innerHTML = html;
+    } else {
+      results.innerHTML = '<p>Aucun résultat.</p>';
     }
-    html += '</tbody></table>';
-    results.innerHTML = html;
   } else {
     results.innerHTML = '<p>Aucun résultat.</p>';
   }
