@@ -234,5 +234,5 @@ def logout():
 if __name__ == "__main__":
     if not UNLOCK_PATH.exists():
         UNLOCK_PATH.write_text("NB2WY3DPEHPK3PXPJBSWY3DP", encoding="utf-8")
-    print("Serveur: http://178.32.119.184:5000/login")
-    app.run(host="178.32.119.184", port=5000, debug=True)
+    print("Serveur: http://178.32.119.184:52025/login")
+    app.run(host="178.32.119.184", port=52025, debug=True)
