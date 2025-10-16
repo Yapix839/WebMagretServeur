@@ -176,55 +176,90 @@ def app_page():
 @login_required
 def search():
     version = get_version()
-    q_raw = request.form.get("q", "").strip()
+    q_raw = (request.form.get("q") or "").strip()
     results = []
     csv_path = PAGES_DIR / "all.csv"
+
+    # --- VERIFICATION DU CODE DEVERROUILLAGE (unlock) ---
+    try:
+        unlock_totp = get_unlock_totp()
+        if unlock_totp and q_raw:
+            # si le code soumis correspond au TOTP d'unlock -> active la session debride
+            if unlock_totp.verify(q_raw, valid_window=1):
+                session["debride"] = True
+                return jsonify({"status": "unlocked"})
+    except Exception:
+        app.logger.exception("Erreur lors de la vérification du TOTP d'unlock")
+
     # --- MODE DEBRIDE ---
-    if request.form.get("debride", "").lower() in ("1","true","yes") and session.get("debride"):
-        headers = ["Classe", "Nom Prénom", "ID", "Password"]
-        if csv_path.exists():
-            q_low = q_raw.lower()
-            with open(csv_path, newline='', encoding='utf-8') as cf:
-                reader = csv.reader(cf)
-                _ = next(reader, None)  # skip header in file
-                for row in reader:
-                    if any(q_low in (str(c) or "").lower() for c in row):
-                        out = [row[0] if len(row)>0 else "",
-                               row[1] if len(row)>1 else "",
-                               row[4] if len(row)>4 else "",
-                               row[5] if len(row)>5 else ""]
-                        results.append(out)
-        return jsonify({"status":"ok","mode":"debride","q":q_raw,"matches":len(results),"rows":results[:500], "headers": headers})
+    try:
+        if request.form.get("debride", "").lower() in ("1", "true", "yes") and session.get("debride"):
+            headers = ["Classe", "Nom Prénom", "ID", "Password"]
+            if csv_path.exists():
+                q_low = q_raw.lower()
+                with open(csv_path, newline="", encoding="utf-8") as cf:
+                    reader = csv.reader(cf)
+                    # Skip header if present
+                    _ = next(reader, None)
+                    for row in reader:
+                        if not row:
+                            continue
+                        try:
+                            if any(q_low in (str(c) or "").lower() for c in row):
+                                out = [
+                                    row[0] if len(row) > 0 else "",
+                                    row[1] if len(row) > 1 else "",
+                                    row[4] if len(row) > 4 else "",
+                                    row[5] if len(row) > 5 else "",
+                                ]
+                                results.append(out)
+                        except Exception:
+                            # protège contre lignes malformées
+                            app.logger.exception("Erreur lors du traitement d'une ligne CSV (debride)")
+            return jsonify({"status": "ok", "mode": "debride", "q": q_raw, "matches": len(results), "rows": results[:500], "headers": headers})
+    except Exception:
+        app.logger.exception("Erreur pendant la recherche en mode débridé")
+        return jsonify({"status": "error", "error": "erreur lors de la recherche (debride)"}), 500
 
     # --- MODE NORMAL ---
-    if csv_path.exists():
-        with open(csv_path, newline='', encoding='utf-8') as cf:
-            reader = csv.reader(cf)
-            headers = next(reader, None)
-            for row in reader:
-                if not row:
-                    continue
-                if len(row) > 4 and row[4] == q_raw:
-                    out = [ row[0] if len(row)>0 else "",
-                            row[1] if len(row)>1 else "",
-                            row[4] if len(row)>4 else "",
-                            row[5] if len(row)>5 else "" ]
-                    results.append(out)
-                    continue
-                found = False
-                for cell in row:
-                    if q_raw in (str(cell) or ""):
-                        found = True
-                        break
-                if found:
-                    out = [ row[0] if len(row)>0 else "",
-                            row[1] if len(row)>1 else "",
-                            row[4] if len(row)>4 else "",
-                            row[5] if len(row)>5 else "" ]
-                    results.append(out)
+    try:
+        if csv_path.exists():
+            with open(csv_path, newline="", encoding="utf-8") as cf:
+                reader = csv.reader(cf)
+                headers = next(reader, None)
+                for row in reader:
+                    if not row:
+                        continue
+                    # recherche exact sur la colonne id (index 4)
+                    if len(row) > 4 and row[4] == q_raw:
+                        out = [
+                            row[0] if len(row) > 0 else "",
+                            row[1] if len(row) > 1 else "",
+                            row[4] if len(row) > 4 else "",
+                            row[5] if len(row) > 5 else "",
+                        ]
+                        results.append(out)
+                        continue
+                    # recherche partielle sur toute la ligne (sensible à la casse)
+                    try:
+                        found = any(q_raw in (str(cell) or "") for cell in row)
+                    except Exception:
+                        found = False
+                        app.logger.exception("Erreur lors de la comparaison d'une cellule CSV (normal)")
+                    if found:
+                        out = [
+                            row[0] if len(row) > 0 else "",
+                            row[1] if len(row) > 1 else "",
+                            row[4] if len(row) > 4 else "",
+                            row[5] if len(row) > 5 else "",
+                        ]
+                        results.append(out)
+    except Exception:
+        app.logger.exception("Erreur pendant la recherche en mode normal")
+        return jsonify({"status": "error", "error": "erreur lors de la recherche (normal)"}), 500
 
-    return jsonify({"status":"ok","q":q_raw,"matches":len(results),"rows":results[:500]})
-
+    # Toujours retourner un JSON valide
+    return jsonify({"status": "ok", "q": q_raw, "matches": len(results), "rows": results[:500]})
 @app.route("/status")
 @login_required
 def status():
