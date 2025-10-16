@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 from functools import wraps
-from flask import Flask, session, redirect, url_for, render_template_string, request, flash, send_from_directory, jsonify
+from flask import Flask, session, redirect, url_for, render_template, render_template_string, request, flash, send_from_directory, jsonify
 import pyotp
 import csv
 
@@ -15,6 +15,7 @@ DATA_DIR.mkdir(exist_ok=True)
 
 USERS_PATH = DATA_DIR / "users.txt"         # format: username:password:totp_secret
 UNLOCK_PATH = DATA_DIR / "unlock_secret.txt"  # clé base32 pour le débridage
+VERSION_PATH = DATA_DIR / "version.txt"
 
 app = Flask(__name__, static_folder=str(PAGES_DIR))
 app.secret_key = APP_SECRET_KEY
@@ -39,6 +40,13 @@ def get_unlock_totp():
         return pyotp.TOTP(UNLOCK_PATH.read_text().strip())
     return None
 
+def get_version():
+    try:
+        with open(VERSION_PATH, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return "inconnue"
+
 # ------------- DÉCORATEUR -------------
 def login_required(fn):
     @wraps(fn)
@@ -52,6 +60,7 @@ def login_required(fn):
 @app.route("/login", methods=["GET","POST"])
 def login():
     users = load_users()
+    version = get_version()
     if request.method == "POST":
         u = request.form.get("username","").strip()
         p = request.form.get("password","").strip()
@@ -91,9 +100,12 @@ def login():
           <button type="submit">Se connecter</button>
         </form>
       </div>
+      <footer style="position:fixed; left:0; bottom:0; width:100%; background-color:#f0f0f0; color:gray; text-align:center; padding:8px 0; font-size:14px;">
+        Vous utilisez la version v{{ version }}
+      </footer>
     </body>
     </html>
-    """)
+    """, version=version)
 
 @app.route("/2fa", methods=["GET","POST"])
 def two_factor():
@@ -102,6 +114,7 @@ def two_factor():
     users = load_users()
     username = session["username"]
     profile = users.get(username)
+    version = get_version()
     if not profile:
         flash("Profil introuvable.", "error")
         return redirect(url_for("login"))
@@ -144,35 +157,28 @@ def two_factor():
           <button type="submit">Valider</button>
         </form>
       </div>
+      <footer style="position:fixed; left:0; bottom:0; width:100%; background-color:#f0f0f0; color:gray; text-align:center; padding:8px 0; font-size:14px;">
+        Vous utilisez la version v{{ version }}
+      </footer>
     </body>
     </html>
-    """, error=error)
+    """, error=error, version=version)
 
-# Serve la page principale (fichier statique)
+# Serve la page principale (rendu dynamique pour le footer)
 @app.route("/app")
 @login_required
 def app_page():
-    return send_from_directory(str(PAGES_DIR), "search_csv_web.html")
+    version = get_version()
+    return render_template("search_csv_web.html", version=version)
 
 # ------------- ROUTE DE RECHERCHE -------------
 @app.route("/search", methods=["POST"])
 @login_required
 def search():
+    version = get_version()
     q_raw = request.form.get("q", "").strip()
-    if q_raw == "":
-        return jsonify({"status":"ok","q":"", "matches":0, "rows":[]})
-
-    try:
-        unlock = get_unlock_totp()
-        if unlock and unlock.verify(q_raw.replace(" ", ""), valid_window=1):
-            session["debride"] = True
-            return jsonify({"status":"unlocked", "message":"mode debridé activé"})
-    except Exception:
-        pass
-
-    csv_path = PAGES_DIR / "all.csv"
     results = []
-
+    csv_path = PAGES_DIR / "all.csv"
     # --- MODE DEBRIDE ---
     if request.form.get("debride", "").lower() in ("1","true","yes") and session.get("debride"):
         headers = ["Classe", "Nom Prénom", "ID", "Password"]
@@ -198,7 +204,6 @@ def search():
             for row in reader:
                 if not row:
                     continue
-                # ID exact check (5th column -> index 4) - CASE SENSITIVE exact equality
                 if len(row) > 4 and row[4] == q_raw:
                     out = [ row[0] if len(row)>0 else "",
                             row[1] if len(row)>1 else "",
@@ -206,7 +211,6 @@ def search():
                             row[5] if len(row)>5 else "" ]
                     results.append(out)
                     continue
-                # else search CASE SENSITIVE in any column, return selected columns
                 found = False
                 for cell in row:
                     if q_raw in (str(cell) or ""):
@@ -231,8 +235,16 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+serveur = 0
+if serveur == 1:
+    hote = "178.32.119.184"
+    port = 52025
+else:
+    hote = "127.0.0.1"
+    port = 5000
+
 if __name__ == "__main__":
     if not UNLOCK_PATH.exists():
         UNLOCK_PATH.write_text("NB2WY3DPEHPK3PXPJBSWY3DP", encoding="utf-8")
-    print("Serveur: http://178.32.119.184:52025/login")
-    app.run(host="178.32.119.184", port=52025, debug=True)
+    print(f"Serveur: http://{hote}:{port}/login")
+    app.run(host=hote, port=port, debug=True)

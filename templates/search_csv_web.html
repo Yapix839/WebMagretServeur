@@ -57,15 +57,12 @@ document.getElementById('searchForm').addEventListener('submit', async function(
   const results = document.getElementById('results');
 
   if(r.status === 'unlocked'){
-    // OTP débridage : afficher le message et révéler champ débridé
     document.getElementById('debrideArea').style.display = 'block';
-    results.innerHTML = ''; // pas de résultats montrés ici
+    results.innerHTML = '';
     return;
   }
 
-  // Afficher uniquement les résultats dont l'ID correspond exactement à la saisie (sensible à la casse)
   if(r.rows && r.rows.length){
-    // On filtre côté client au cas où, mais le backend doit déjà limiter à une correspondance exacte
     const filtered = r.rows.filter(row => row[2] === q);
     msg.innerHTML = '<small>Résultats: '+filtered.length+'</small>';
     if(filtered.length){
@@ -94,13 +91,11 @@ document.getElementById('debrideForm').addEventListener('submit', async function
   if(!q2) return;
   const fd = new FormData();
   fd.append('q', q2);
-  fd.append('debride', '1'); // indique mode débridé
+  fd.append('debride', '1');
   const r = await postForm('/search', fd);
   const results = document.getElementById('results');
   if(r.rows && r.rows.length){
-    // afficher lignes complètes (toutes colonnes)
     let html = '<table class="table"><thead><tr>';
-    // Affiche les vrais noms de colonnes si disponibles
     if(r.headers && r.headers.length){
       for(const h of r.headers) html += '<th>' + (h || '') + '</th>';
     } else {
@@ -123,5 +118,9 @@ document.getElementById('debrideForm').addEventListener('submit', async function
   }
 });
 </script>
+
+<footer style="position:fixed; left:0; bottom:0; width:100%; background-color:#f0f0f0; color:gray; text-align:center; padding:8px 0; font-size:14px;">
+  Vous utilisez la version v{{ version }}
+</footer>
 </body>
 </html>
