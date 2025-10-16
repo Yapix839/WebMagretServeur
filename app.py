@@ -10,7 +10,7 @@ import csv
 APP_SECRET_KEY = os.environ.get("APP_SECRET_KEY", "change_this_secret")
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
-PAGES_DIR = BASE_DIR / "Pages"
+PAGES_DIR = BASE_DIR / "pages"
 DATA_DIR.mkdir(exist_ok=True)
 
 USERS_PATH = DATA_DIR / "users.txt"         # format: username:password:totp_secret

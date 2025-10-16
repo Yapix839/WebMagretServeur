@@ -1,15 +1,18 @@
-Mon_projet/
-├── app.py
-├── gen_totp_secret.py               # Générateur de clé TOTP base32
-├── requirements.txt
-├── README.md
+WebMagretServeur/
+├── app.py                           # Fichier principale du site
+├── README.md                        # Readme github
 ├── data/
-│   ├── unlock_secret.txt            # clé OTP dédiée pour débridage
-│   └── users.txt                    # users: username:password:totp_secret
+│   ├── unlock_secret.txt            # Clé OTP dédiée pour débridage
+│   ├── users.txt                    # Utilisateur > user:password:totp_secret
+│   └── version.txt                  # Stockage de la version au format X.Y.Z
 ├── Pages/
-│   ├── all.csv
-│   ├── search_csv_web.html
-│   └── V1.1.html
+│   ├── all.csv                      # Csv de stockage de identifiant
+│   └── V1.1.html                    # Premier version pas encore git
 ├── file/
-│   ├── architecture.txt
-│   ├── requirements.txt
+│   ├── architecture.txt             # Fichier de stockage de l'architecture
+│   └── requirements.txt             # Liste des bibliotheque nécessaire à installer
+├── templates/
+│   └── search_csv_web.html          # Page de recherche aprés connection
+└── generateur/
+    ├── gen_password_csv.py          # Genere un nouveau lot de mot de passe dans all.csv
+    └── gen_totp_secret.py           # Générateur de clé TOTP base32

@@ -2,7 +2,7 @@ import csv
 import random
 import string
 
-fichier_csv = "./Pages/all.csv"
+fichier_csv = "./pages/all.csv"
 
 def generer_mdp(existants):
     caracteres = string.ascii_uppercase + string.digits
