@@ -20,6 +20,12 @@ VERSION_PATH = DATA_DIR / "version.txt"
 app = Flask(__name__, static_folder=str(PAGES_DIR))
 app.secret_key = APP_SECRET_KEY
 
+csv_emplacement_def = 0
+if csv_emplacement_def == 1:
+    csv_emplacement = "all.csv"
+else:
+    csv_emplacement = "all_vrai.csv"
+
 # ------------- UTIL ----------------
 def load_users():
     users = {}
@@ -178,7 +184,7 @@ def search():
     version = get_version()
     q_raw = (request.form.get("q") or "").strip()
     results = []
-    csv_path = PAGES_DIR / "all.csv"
+    csv_path = PAGES_DIR / csv_emplacement
 
     # --- VERIFICATION DU CODE DEVERROUILLAGE (unlock) ---
     try:
@@ -270,7 +276,7 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-serveur = 0
+serveur = 1
 if serveur == 1:
     hote = "178.32.119.184"
     port = 52025
