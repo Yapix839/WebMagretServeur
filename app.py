@@ -2,9 +2,9 @@
 import os
 from pathlib import Path
 from functools import wraps
-from flask import Flask, session, redirect, url_for, render_template, render_template_string, request, flash, send_from_directory, jsonify
+from flask import Flask, session, redirect, url_for, render_template, render_template_string, request, flash, jsonify
 import pyotp
-import csv
+from variables_reader import read_variables
 
 # ---------------- CONFIG ----------------
 APP_SECRET_KEY = os.environ.get("APP_SECRET_KEY", "change_this_secret")
@@ -20,7 +20,8 @@ VERSION_PATH = DATA_DIR / "version.txt"
 app = Flask(__name__, static_folder=str(PAGES_DIR))
 app.secret_key = APP_SECRET_KEY
 
-csv_emplacement_def = 0
+vars = read_variables()
+csv_emplacement_def = int(vars.get("csv_emplacement_def", "0"))
 if csv_emplacement_def == 1:
     csv_emplacement = "all.csv"
 else:
@@ -276,7 +277,7 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-serveur = 1
+serveur = int(vars.get("serveur", "0"))
 if serveur == 1:
     hote = "178.32.119.184"
     port = 52025
