@@ -26,8 +26,16 @@ import importlib
 from werkzeug.serving import run_simple
 from typing import Callable
 
-HOST = os.environ.get("HOST", "0.0.0.0")
-PORT = int(os.environ.get("PORT", 5000))
+serveur = int(vars.get("serveur", "0"))
+if serveur == 1:
+    hote = "178.32.119.184"
+    port = 52025
+else:
+    hote = "127.0.0.1"
+    port = 5000
+
+HOST = os.environ.get("HOST", hote)
+PORT = int(os.environ.get("PORT", port))
 DEBUG = os.environ.get("FLASK_DEBUG", "0") == "1"
 
 def load_wsgi_from_module(module_name: str) -> Callable:
