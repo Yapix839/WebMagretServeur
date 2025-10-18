@@ -5,11 +5,11 @@ import os
 import tempfile
 
 BASE_DIR = os.path.dirname(__file__)
-DATA_DIR = os.path.join(BASE_DIR, "data")
+DATA_DIR = os.path.join(BASE_DIR, "/home/yann/Git/WebMagretServeur/data")
 VARIABLES_FILE = os.path.join(DATA_DIR, "variables.txt")
 
 # Liste des variables autorisées (ajustez selon vos besoins)
-ALLOWED_VARIABLES = ("serveur", "csv_emplacement_def")
+ALLOWED_VARIABLES = ("serveur", "csv_réel")
 
 def ensure_data_dir():
     """Créer data/ si absent."""

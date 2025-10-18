@@ -5,10 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3f2bd324-6c13-4de6-9cda-6b8703f822f4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/run_all.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/users.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/users.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/generateur/gen_password_csv.py" beforeDir="false" afterPath="$PROJECT_DIR$/generateur/gen_password_csv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/V1.1.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/all.csv" beforeDir="false" afterPath="$PROJECT_DIR$/csv/all.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/all_vrai.csv" beforeDir="false" afterPath="$PROJECT_DIR$/csv/all_vrai.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/panel_admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/panel_admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/variables_reader.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,6 +42,7 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Python.Admin panel.executor": "Run",
+    "Python.Run all.executor": "Run",
     "Python.Runweb.executor": "Run",
     "Python.app.executor": "Run",
     "Python.panel_admin.executor": "Run",
@@ -57,7 +63,7 @@
       <recent name="$PROJECT_DIR$/Pages" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.Admin panel">
+  <component name="RunManager" selected="Python.Run all">
     <configuration name="Admin panel" type="PythonConfigurationType" factoryName="Python">
       <module name="WebMagretServeur" />
       <option name="ENV_FILES" value="" />
@@ -73,6 +79,29 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/panel_admin.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Run all" type="PythonConfigurationType" factoryName="Python">
+      <module name="WebMagretServeur" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.13 (.venv)" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="run_all.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -105,6 +134,7 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.Run all" />
       <item itemvalue="Python.Runweb" />
       <item itemvalue="Python.Admin panel" />
     </list>

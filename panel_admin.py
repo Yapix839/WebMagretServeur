@@ -1,20 +1,10 @@
-"""
-panel_admin.py - panneau d'administration indépendant (ajusté affichages et flashs sans points)
-
-Modifications :
-- Suppression du flash "Connecté en tant que {auth_user}." après 2FA (vous l'aviez retiré).
-- Titre "Variables" remplacé par "Variables:".
-- Remplacement des listes de messages flash (<ul><li>) par des blocs <div> pour supprimer les puces.
-
-Lancer : python panel_admin.py
-"""
 import os
 import tempfile
 from flask import (
     Flask, request, redirect, url_for, session, flash,
     render_template_string
 )
-from variables_reader import read_variables
+from file.variables_reader import read_variables
 vars = read_variables()
 
 try:
@@ -27,7 +17,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 USERS_FILE = os.path.join(DATA_DIR, "users.txt")
 VARIABLES_FILE = os.path.join(DATA_DIR, "variables.txt")
 
-ALLOWED_VARIABLES = ("serveur", "csv_emplacement_def")
+ALLOWED_VARIABLES = ("serveur", "csv_réel")
 
 
 # ---------- fichiers & atomic write ----------

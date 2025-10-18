@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 import os
+import csv
 from pathlib import Path
 from functools import wraps
 from flask import Flask, session, redirect, url_for, render_template, render_template_string, request, flash, jsonify
 import pyotp
-from variables_reader import read_variables
+from file.variables_reader import read_variables
 
 # ---------------- CONFIG ----------------
 APP_SECRET_KEY = os.environ.get("APP_SECRET_KEY", "change_this_secret")
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
-PAGES_DIR = BASE_DIR / "pages"
+PAGES_DIR = BASE_DIR / "csv"
 DATA_DIR.mkdir(exist_ok=True)
 
-USERS_PATH = DATA_DIR / "users.txt"         # format: username:password:totp_secret
+USERS_PATH = DATA_DIR / "users.txt"         # format: username:password:totp_secret[:optional_fourth_field]
 UNLOCK_PATH = DATA_DIR / "unlock_secret.txt"  # clé base32 pour le débridage
 VERSION_PATH = DATA_DIR / "version.txt"
 
@@ -37,9 +38,13 @@ def load_users():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        parts = line.split(":", 2)
+        # split into up to 4 parts so we tolerate an optional 4th field without breaking the TOTP
+        parts = line.split(":", 3)
         if len(parts) >= 3:
-            users[parts[0]] = {"password": parts[1], "totp": parts[2]}
+            username = parts[0].strip()
+            password = parts[1].strip()
+            totp_secret = parts[2].strip()
+            users[username] = {"password": password, "totp": totp_secret}
     return users
 
 def get_unlock_totp():
