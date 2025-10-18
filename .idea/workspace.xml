@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3f2bd324-6c13-4de6-9cda-6b8703f822f4" name="Changes" comment="" />
+    <list default="true" id="3f2bd324-6c13-4de6-9cda-6b8703f822f4" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/run_all.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_all.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -124,9 +126,9 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.Admin panel" />
       <item itemvalue="Python.Run all" />
       <item itemvalue="Python.Runweb" />
+      <item itemvalue="Python.Admin panel" />
     </list>
   </component>
   <component name="TaskManager">
