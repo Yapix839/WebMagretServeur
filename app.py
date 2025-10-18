@@ -30,21 +30,82 @@ else:
 
 # ------------- UTIL ----------------
 def load_users():
+    """
+    Charge data/users.txt en tolérant un 4ème champ optionnel.
+    Format attendu : username:password:totp_secret[:optional]
+    - Si totp_secret est vide ou 'none' (insensible à la casse) -> 2FA désactivée (totp == None).
+    - Si totp_secret existe mais n'est pas une clé base32 décodable -> on le remplace automatiquement
+      par 'none' (2FA désactivée) dans users.txt.
+    Retourne dict users: { username: {"password": ..., "totp": <secret or None>} }
+    """
+    import base64
+    import binascii
+
     users = {}
     if not USERS_PATH.exists():
         USERS_PATH.write_text("", encoding="utf-8")
         return users
-    for line in USERS_PATH.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
+
+    text = USERS_PATH.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)  # préserve les fins de lignes pour réécriture fidèle
+    out_lines = []
+    changed = False
+
+    for original_line in lines:
+        line = original_line.rstrip("\r\n")
+        stripped = line.strip()
+        # conservez les lignes vides / commentaires telles quelles
+        if not stripped or stripped.startswith("#"):
+            out_lines.append(original_line)
             continue
-        # split into up to 4 parts so we tolerate an optional 4th field without breaking the TOTP
-        parts = line.split(":", 3)
-        if len(parts) >= 3:
-            username = parts[0].strip()
-            password = parts[1].strip()
-            totp_secret = parts[2].strip()
-            users[username] = {"password": password, "totp": totp_secret}
+
+        parts = line.split(":", 3)  # up to 4 parts
+        if len(parts) < 3:
+            # ligne malformée : conservez telle quelle pour ne pas perdre de données
+            out_lines.append(original_line)
+            continue
+
+        username = parts[0].strip()
+        password = parts[1].strip()
+        totp_raw = parts[2].strip()
+        extra = parts[3] if len(parts) == 4 else None
+
+        # Normalisation : empty or "none" => disabled (None)
+        if totp_raw == "" or totp_raw.lower() == "none":
+            totp_val = None
+            normalized_field = "none"
+        else:
+            # Essayer de décoder en base32 pour valider la clé
+            try:
+                # remove spaces and uppercase for base32 decode
+                s = totp_raw.replace(" ", "").upper()
+                # base64.b32decode lève binascii.Error si invalide
+                _ = base64.b32decode(s, casefold=True)
+                totp_val = totp_raw
+                normalized_field = totp_raw
+            except (binascii.Error, Exception):
+                # invalide -> désactiver la 2FA et normaliser à "none"
+                totp_val = None
+                normalized_field = "none"
+
+        users[username] = {"password": password, "totp": totp_val}
+
+        # reconstruire la ligne normalisée ; on inclut l'éventuel 4ème champ tel quel
+        if extra is not None:
+            new_line = f"{username}:{password}:{normalized_field}:{extra}"
+        else:
+            new_line = f"{username}:{password}:{normalized_field}"
+
+        # Comparer avec le champ original pour détecter changement
+        if totp_raw != normalized_field:
+            changed = True
+
+        out_lines.append(new_line + ("\n" if original_line.endswith("\n") else ""))
+
+    # Réécrire le fichier seulement si on a normalisé quelque chose
+    if changed:
+        USERS_PATH.write_text("".join(out_lines), encoding="utf-8")
+
     return users
 
 def get_unlock_totp():
@@ -130,13 +191,22 @@ def two_factor():
     if not profile:
         flash("Profil introuvable.", "error")
         return redirect(url_for("login"))
+
+    # Récupère le secret TOTP et considère que la 2FA est désactivée
+    # si le champ est None, vide, ou la chaîne "none" (insensible à la casse).
+    totp_secret = profile.get("totp")
+    if totp_secret is None or str(totp_secret).strip().lower() in ("", "none"):
+        # 2FA désactivée pour ce compte : on termine l'authentification
+        session.clear()
+        session["authed"] = True
+        session["username"] = username
+        session["just_authed"] = True
+        return redirect(url_for("app_page"))
+
     error = None
     if request.method == "POST":
         code = request.form.get("code","").strip()
-        totp_secret = profile.get("totp")
-        if not totp_secret:
-            error = "Aucun secret TOTP configuré pour ce compte."
-        else:
+        try:
             totp = pyotp.TOTP(totp_secret)
             if totp.verify(code, valid_window=1):
                 session.clear()
@@ -146,6 +216,10 @@ def two_factor():
                 return redirect(url_for("app_page"))
             else:
                 error = "Code TOTP invalide."
+        except Exception:
+            # protège contre un secret malformé
+            error = "Erreur lors de la vérification du TOTP."
+
     return render_template_string("""
     <!doctype html>
     <html lang="fr">
