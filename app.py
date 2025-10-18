@@ -130,6 +130,16 @@ def login_required(fn):
     return wrapped
 
 # ------------- ROUTES D'AUTH -------------
+
+@app.route("/lgin", methods=["GET", "POST"])
+def login_redirect():
+    return redirect(url_for("login"))
+
+
+@app.route("/", methods=["GET"], strict_slashes=False)
+def racine_logine_redirecte():
+    return redirect(url_for("login"))
+
 @app.route("/login", methods=["GET","POST"])
 def login():
     users = load_users()
