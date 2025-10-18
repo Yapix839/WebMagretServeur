@@ -25,6 +25,7 @@ import os
 import importlib
 from werkzeug.serving import run_simple
 from typing import Callable
+from file.variables_reader import read_variables
 
 serveur = int(vars.get("serveur", "0"))
 if serveur == 1:
