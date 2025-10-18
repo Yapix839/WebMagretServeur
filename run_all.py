@@ -34,6 +34,7 @@ else:
     hote = "127.0.0.1"
     port = 5000
 
+vars = read_variables()
 HOST = os.environ.get("HOST", hote)
 PORT = int(os.environ.get("PORT", port))
 DEBUG = os.environ.get("FLASK_DEBUG", "0") == "1"
